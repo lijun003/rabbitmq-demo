@@ -8,6 +8,7 @@ import org.junit.Test;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConfirmListener;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
@@ -35,6 +36,17 @@ public class SenderTest {
         for (int i = 0; i < 5; i++) {
             channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, null, (message + i).getBytes("UTF-8"));
         }
+
+        channel.addConfirmListener(new ConfirmListener() {
+            @Override
+            public void handleNack(long deliveryTag, boolean multiple) throws IOException {
+                System.out.println("未确认消息，标识：" + deliveryTag);
+            }
+            @Override
+            public void handleAck(long deliveryTag, boolean multiple) throws IOException {
+                System.out.println(String.format("已确认消息，标识：%d，多个消息：%b", deliveryTag, multiple));
+            }
+        });
 
         channel.close();
         connection.close();
